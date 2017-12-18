@@ -11,8 +11,10 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.config.SocketConfig;
@@ -74,6 +76,9 @@ public class ScopusService {
 		String endpoint = ConfigurationManager.getProperty("cris", "ametrics.elsevier.scopus.endpoint");
 		String apiKey = ConfigurationManager.getProperty("cris", "ametrics.elsevier.scopus.apikey");
 
+		String proxyHost = ConfigurationManager.getProperty("http.proxy.host");
+		String proxyPort = ConfigurationManager.getProperty("http.proxy.port");
+
 		HttpGet method = null;
 		ScopusResponse scopusResponse = null;
 		int numberOfTries = 0;
@@ -112,6 +117,12 @@ public class ScopusService {
 				uriBuilder.addParameter("query", query);
 
 				method = new HttpGet(uriBuilder.build());
+				if (StringUtils.isNotBlank(proxyHost) && StringUtils.isNotBlank(proxyPort)) {
+					HttpHost proxy = new HttpHost(proxyHost, Integer.parseInt(proxyPort), "http");
+					RequestConfig config = RequestConfig.custom().setProxy(proxy).build();
+					method.setConfig(config);
+				}
+
 
 				method.addHeader("Accept", "application/xml");
 				method.addHeader("X-ELS-APIKey", apiKey);
